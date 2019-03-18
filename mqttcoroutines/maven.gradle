@@ -1,0 +1,64 @@
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
+
+def siteUrl = 'https://github.com/sorinirimies/MqttCoroutines'
+def codeRepositoryUrl = 'https://github.com/sorinirimies/MqttCoroutiness.git'
+def issuesUrl = 'https://github.com/sorinirimies/MqttCoroutiness'
+
+
+bintray {
+    user = project.hasProperty('bintrayPrivateUser') ? project.bintrayPrivateUser : System.getenv('BINTRAY_USER')
+    key = project.hasProperty('bintrayPrivateKey') ? project.bintrayPrivateKey : System.getenv('BINTRAY_PASSWORD')
+
+    configurations = ['archives']
+    publish = true
+    pkg {
+        repo = 'greenlibs'
+        name = 'MqttCoroutines'
+        desc = 'Coroutines wrapper for the Paho Mqtt library.'
+        websiteUrl = siteUrl
+        issueTrackerUrl = issuesUrl
+        vcsUrl = codeRepositoryUrl
+        licenses = ['Apache-2.0']
+        labels = ['library', 'kotlin', 'android', 'MqttCoroutines', 'mqtt', 'coroutines']
+    }
+}
+
+install {
+    repositories.mavenInstaller {
+        pom.project {
+            packaging 'aar'
+            name project.name
+            url siteUrl
+            scm {
+                connection codeRepositoryUrl
+                developerConnection codeRepositoryUrl
+                url siteUrl
+
+            }
+            licenses {
+                license { // HARDCODED
+                    name 'Apache-2.0'
+                    url 'https://www.gnu.org/licenses/gpl.txt'
+                    distribution 'repo'
+                }
+            }
+        }
+
+    }
+}
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+configurations {
+    archives {
+        extendsFrom configurations.default
+    }
+}
