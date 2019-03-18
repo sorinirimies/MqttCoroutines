@@ -14,14 +14,18 @@ import java.util.*
 import kotlin.concurrent.fixedRateTimer
 import kotlin.coroutines.CoroutineContext
 
-typealias MqttPayload = (Pair<String, MqttMessage>) -> Unit
-typealias MqttConnectionStatus = (Boolean) -> Unit
+internal typealias MqttPayload = (Pair<String, MqttMessage>) -> Unit
+internal typealias MqttConnectionStatus = (MqttConnectionState) -> Unit
 
-class CoroutineMqttManager(mqttPayload: MqttPayload, mqttConnectionStatus: MqttConnectionStatus) : MqttManager,
+class CoroutineMqttManager(
+    mqttPayload: MqttPayload,
+    mqttConnectionStatus: MqttConnectionStatus,
+    private val serverUri: String,
+    private val clientId: String,
+    private var user: String?
+) : MqttManager,
     CoroutineScope {
     private val job = Job()
-    override val coroutineContext: CoroutineContext
-        get() = job + Dispatchers.Default
     private var maxNumberOfRetries = 4
     private var retryInterval = 4000L
     private var topics: Array<String> = arrayOf()
@@ -29,101 +33,95 @@ class CoroutineMqttManager(mqttPayload: MqttPayload, mqttConnectionStatus: MqttC
     private var timerReconnect: Timer? = null
     private var retryCount = 0
     private var isMqttClientConnected = false
-    private var mqttClient: MqttAsyncClient? = null
-    private var user: String? = null
-    private var clientId: String? = null
+    private val mqttClient: MqttAsyncClient by lazy { MqttAsyncClient(serverUri, clientId, MemoryPersistence()) }
+    private var mqttConnectOptions: MqttConnectOptions? = null
     private var explicitDisconnection = false
-    private val TAG = CoroutineMqttManager::class.java.simpleName
+    private val tag = CoroutineMqttManager::class.java.simpleName
 
-    private val channelMqttPayload: SendChannel<Pair<String, MqttMessage>> = actor {
-        channel.consumeEach {
-            mqttPayload.invoke(it)
-        }
-    }
+    private val channelMqttPayload: SendChannel<Pair<String, MqttMessage>> =
+        actor { channel.consumeEach { mqttPayload.invoke(it) } }
 
-    private val channelMqttConnectionState: SendChannel<Boolean> = actor {
-        channel.consumeEach {
-            mqttConnectionStatus.invoke(it)
-        }
-    }
+    private val channelMqttConnectionState: SendChannel<MqttConnectionState> =
+        actor { channel.consumeEach { mqttConnectionStatus.invoke(it) } }
+
+    override val coroutineContext: CoroutineContext get() = job + Dispatchers.Default
 
     override fun connect(
         serverURI: String,
         topics: Array<String>,
         qos: IntArray,
-        clientId: String?,
-        user: String?
+        mqttConnectOptions: MqttConnectOptions?
     ) {
         if (isMqttClientConnected) {
-            Log.i(TAG, "connect was called although the mqttClient is already connected")
+            Log.i(tag, "connect was called although the mqttClient is already connected.")
             return
         }
         job.start()
         this@CoroutineMqttManager.topics = topics
         this@CoroutineMqttManager.qos = qos
-        this@CoroutineMqttManager.clientId = clientId
+        this@CoroutineMqttManager.mqttConnectOptions = mqttConnectOptions
         this@CoroutineMqttManager.user = user
-        mqttClient = MqttAsyncClient(serverURI, clientId, MemoryPersistence())
-        mqttClient?.setCallback(object : MqttCallback {
+        mqttClient.setCallback(object : MqttCallback {
             @Throws(Exception::class)
             override fun messageArrived(topic: String, message: MqttMessage) {
-                val msg = message.payload.toString(Charsets.UTF_8)
-                Log.i(TAG, "Mqtt payload arrived: $msg")
+                Log.i(tag, "Mqtt payload arrived: ${message.payload.toString(Charsets.UTF_8)}")
                 sendMqttPayload(topic to message)
             }
 
             override fun deliveryComplete(token: IMqttDeliveryToken?) = Unit
 
             override fun connectionLost(cause: Throwable) {
-                isMqttClientConnected = false
-                sendMqttConnectionStatus(false)
-                channelMqttConnectionState.close()
+                sendMqttConnectionStatus(MqttConnectionState.DISCONNECTED)
                 Log.d(cause.message, "MQTT connection lost!")
-                if (!explicitDisconnection) {
-                    resetTimer()
-                    retry()
+                isMqttClientConnected = false
+                if (explicitDisconnection) {
+                    channelMqttConnectionState.close()
+                    channelMqttPayload.close()
+                    job.cancel()
+                    return
                 }
+                resetTimer()
+                retry()
             }
         })
         val connectAction: IMqttActionListener = object : IMqttActionListener {
             override fun onSuccess(asyncActionToken: IMqttToken?) {
                 isMqttClientConnected = true
-                sendMqttConnectionStatus(true)
+                sendMqttConnectionStatus(MqttConnectionState.CONNECTED)
                 Log.d(CoroutineMqttManager::class.java.simpleName, "MQTT connected")
-                mqttClient?.subscribe(topics, qos, null, object : IMqttActionListener {
+                mqttClient.subscribe(topics, qos, null, object : IMqttActionListener {
                     override fun onSuccess(asyncActionToken: IMqttToken?) {
-                        Log.i(TAG, "MQTT subscription successful")
+                        Log.i(tag, "MQTT subscription successful")
                     }
 
                     override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable) {
-                        Log.e(TAG, "MQTT could not subscribe: $exception")
+                        Log.e(tag, "MQTT could not subscribe: $exception")
                     }
                 })
             }
 
             override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable) {
                 isMqttClientConnected = false
+                sendMqttConnectionStatus(MqttConnectionState.DISCONNECTED)
                 channelMqttPayload.close()
                 channelMqttConnectionState.close()
-                Log.e(TAG, "MQTT could not establish connection: $exception")
+                Log.e(tag, "MQTT could not establish connection: $exception")
                 if (!explicitDisconnection) {
                     retry()
                 }
             }
         }
         try {
-            val options = MqttConnectOptions().apply {
-                isCleanSession = true
-                userName = user
-            }
-            mqttClient?.connect(options, null, connectAction)
+            mqttClient.connect(mqttConnectOptions, null, connectAction)
+            sendMqttConnectionStatus(MqttConnectionState.CONNECTING)
         } catch (cause: MqttException) {
-            Log.e(TAG, "MQTT connecting issue: $cause")
+            sendMqttConnectionStatus(MqttConnectionState.CONNECTION_FAILED)
+            Log.e(tag, "MQTT connecting issue: $cause")
         }
     }
 
-    fun sendMqttConnectionStatus(isConnected: Boolean = false) = launch {
-        channelMqttConnectionState.send(isConnected)
+    fun sendMqttConnectionStatus(mqttConnectionState: MqttConnectionState) = launch {
+        channelMqttConnectionState.send(mqttConnectionState)
     }
 
     fun sendMqttPayload(message: Pair<String, MqttMessage>) = launch {
@@ -133,12 +131,13 @@ class CoroutineMqttManager(mqttPayload: MqttPayload, mqttConnectionStatus: MqttC
 
     override fun disconnect() {
         if (!isMqttClientConnected) {
-            Log.w(TAG, "disconnect was called although the mqttClient is not connected")
+            Log.w(tag, "disconnect was called although the mqttClient is not connected")
             return
         }
         val disconnectAction: IMqttActionListener = object : IMqttActionListener {
             override fun onSuccess(asyncActionToken: IMqttToken?) {
-                Log.i(TAG, "Mqtt Client disconnected")
+                Log.i(tag, "Mqtt Client disconnected")
+                sendMqttConnectionStatus(MqttConnectionState.DISCONNECTED)
                 isMqttClientConnected = false
                 explicitDisconnection = true
                 channelMqttPayload.close()
@@ -147,19 +146,20 @@ class CoroutineMqttManager(mqttPayload: MqttPayload, mqttConnectionStatus: MqttC
             }
 
             override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable) {
-                Log.e(TAG, "Disconnection failed: $exception")
+                Log.e(tag, "Disconnection failed: $exception")
+                sendMqttConnectionStatus(MqttConnectionState.DISCONNECTION_FAILED)
             }
         }
         try {
-            if (mqttClient?.isConnected == true)
-                mqttClient?.disconnect(null, disconnectAction)
+            if (mqttClient.isConnected)
+                mqttClient.disconnect(null, disconnectAction)
         } catch (cause: MqttException) {
             if (cause.reasonCode == MqttException.REASON_CODE_CLIENT_ALREADY_DISCONNECTED.toInt()) {
                 isMqttClientConnected = false
                 explicitDisconnection = true
-                Log.i(TAG, "Client is already disconnected!")
+                Log.i(tag, "Client is already disconnected!")
             } else {
-                Log.e(TAG, "Disconnection error: $cause")
+                Log.e(tag, "Disconnection error: $cause")
             }
         }
     }
@@ -185,13 +185,13 @@ class CoroutineMqttManager(mqttPayload: MqttPayload, mqttConnectionStatus: MqttC
         if (timerReconnect == null) {
             timerReconnect = fixedRateTimer("mqtt_reconnect_timer", true, 0, retryInterval) {
                 retryCount++
-                Log.i(TAG, "MQTT reconnection retry: $retryCount")
-                if (mqttClient?.isConnected == true || retryCount > maxNumberOfRetries) {
-                    sendMqttConnectionStatus(isMqttClientConnected)
+                Log.i(tag, "MQTT reconnection retry: $retryCount")
+                if (mqttClient.isConnected || retryCount > maxNumberOfRetries) {
+                    sendMqttConnectionStatus(MqttConnectionState.CONNECTED)
                     cancel()
                 }
                 val loggedIn = user != null
-                if (loggedIn) connect(mqttClient?.serverURI ?: "", topics, qos, clientId, user)
+                if (loggedIn) connect(serverUri, topics, qos, mqttConnectOptions)
                 else disconnect()
             }
         }

@@ -1,5 +1,7 @@
 package com.sorinirimies.mqttcoroutines
 
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions
+
 interface MqttManager {
 
     /**
@@ -9,10 +11,15 @@ interface MqttManager {
      * @param serverURI
      * @param topics
      * @param qos
-     * @param clientId
      * @param user
      */
-    fun connect(serverURI: String, topics: Array<String>, qos: IntArray, clientId: String?= null, user: String? = null)
+    fun connect(
+        serverURI: String,
+        topics: Array<String>,
+        qos: IntArray,
+        mqttConnectOptions: MqttConnectOptions?,
+        user: String? = null
+    )
 
     /**
      * Disconnects the mqtt client
