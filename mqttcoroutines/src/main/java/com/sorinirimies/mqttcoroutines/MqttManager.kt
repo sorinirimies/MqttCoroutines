@@ -8,18 +8,15 @@ interface MqttManager {
      * Connects the mqtt client to the given [serverURI] and subscribes to the given [topics]. For [qos], please refer
      * to the documentation of the paho-mqtt client
      * (https://www.eclipse.org/paho/files/mqttdoc/MQTTClient/html/qos.html)
-     * @param serverURI
      * @param topics
      * @param qos
-     * @param user
      */
     fun connect(
-        serverURI: String,
         topics: Array<String>,
         qos: IntArray,
         mqttConnectOptions: MqttConnectOptions?,
-        user: String? = null
-    )
+        retryInterval : Long= 4000L,
+        maxNumberOfRetries: Int = 4)
 
     /**
      * Disconnects the mqtt client
