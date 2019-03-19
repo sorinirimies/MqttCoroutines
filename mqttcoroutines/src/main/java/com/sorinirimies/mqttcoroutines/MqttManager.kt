@@ -5,35 +5,30 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 interface MqttManager {
 
     /**
-     * Connects the mqtt client to the given [serverURI] and subscribes to the given [topics]. For [qos], please refer
+     * Connects the mqtt client to the mqttBroker and subscribes to the given [topics]. For [qos], please refer
      * to the documentation of the paho-mqtt client
      * (https://www.eclipse.org/paho/files/mqttdoc/MQTTClient/html/qos.html)
      * @param topics
      * @param qos
+     * @param mqttConnectOptions the [MqttConnectOptions] with which we can configure the client
+     * @param retryInterval how often to retry connecting
+     * @param maxNumberOfRetries total amount of trtries
+     * @return whether mqttClient is connected or not
      */
     fun connect(
         topics: Array<String>,
         qos: IntArray,
-        mqttConnectOptions: MqttConnectOptions?,
-        retryInterval : Long= 4000L,
-        maxNumberOfRetries: Int = 4)
+        mqttConnectOptions: MqttConnectOptions? = null,
+        retryInterval: Long = 4000L,
+        maxNumberOfRetries: Int = 4
+    ): Boolean
+
+    fun subscribeToMqttPayload(mqttPayload: MqttPayload)
+
+    fun subscribeToMqttConnectionState(mqttConnectionStateListener: MqttConnectionStateListener)
 
     /**
      * Disconnects the mqtt client
      */
     fun disconnect()
-
-    /**
-     * Sets the [retryInterval] as interval time for the retry mechanism in milliseconds. In case of
-     * a connection loss, the mqtt client tries to reconnect every [retryInterval] milliseconds.
-     * If this is not set, the default value is 4000 milliseconds.
-     */
-    fun setRetryIntervalTime(retryInterval: Long)
-
-    /**
-     * Sets the [maxNumberOfRetries] for the mqtt client. In case of a connection loss, the mqtt
-     * client tries to reconnect a maximum number of [maxNumberOfRetries] times.
-     * If this is not set, the default value is a maximum of 4 retries.
-     */
-    fun setMaxNumberOfRetires(maxNumberOfRetries: Int)
 }
