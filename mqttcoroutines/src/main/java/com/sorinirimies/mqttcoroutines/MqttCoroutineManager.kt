@@ -25,12 +25,12 @@ class MqttCoroutineManager(
     private val job = Job()
     private var maxNumberOfRetries = 4
     private var retryInterval = 4000L
-    private var topics: Array<String> = arrayOf()
-    private var qos: IntArray = intArrayOf()
+    private var topics = arrayOf<String>()
+    private var qos = intArrayOf()
     private var timerReconnect: Timer? = null
     private var retryCount = 0
     private var isMqttClientConnected = false
-    private val mqttClient: MqttAsyncClient by lazy(LazyThreadSafetyMode.NONE) {
+    private val mqttClient by lazy(LazyThreadSafetyMode.NONE) {
         MqttAsyncClient(
             serverUri,
             clientId,

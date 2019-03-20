@@ -4,8 +4,6 @@ apply plugin: 'kotlin-android-extensions'
 android {
     compileSdkVersion 28
 
-
-
     defaultConfig {
         applicationId "com.sorinirimies.mqttcoroutines.sample"
         minSdkVersion 16
