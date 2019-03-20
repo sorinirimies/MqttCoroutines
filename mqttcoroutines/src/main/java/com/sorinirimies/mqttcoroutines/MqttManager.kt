@@ -21,14 +21,13 @@ interface MqttManager {
         mqttConnectOptions: MqttConnectOptions? = null,
         retryInterval: Long = 4000L,
         maxNumberOfRetries: Int = 4
-    ): Boolean
-
-    fun subscribeToMqttPayload(mqttPayload: MqttPayload)
-
-    fun subscribeToMqttConnectionState(mqttConnectionStateListener: MqttConnectionStateListener)
+    )
 
     /**
      * Disconnects the mqtt client
      */
     fun disconnect()
+
+    /**Close down completely the mqtt client*/
+    fun destroyMqttClient()
 }
