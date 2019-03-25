@@ -27,7 +27,4 @@ interface MqttManager {
      * Disconnects the mqtt client
      */
     fun disconnect()
-
-    /**Close down completely the mqtt client*/
-    fun destroyMqttClient()
 }
