@@ -2,8 +2,7 @@ package com.sorinirimies.mqttcoroutines
 
 import android.util.Log
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.SendChannel
-import kotlinx.coroutines.channels.actor
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import org.eclipse.paho.client.mqttv3.*
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
@@ -17,12 +16,12 @@ typealias MqttConnectionStateListener = (MqttConnectionState) -> Unit
 class MqttCoroutineManager(
     private val mqttPayload: MqttPayload,
     private val mqttConnectionStateListener: MqttConnectionStateListener,
-    private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Main,
     private val serverUrl: String,
     private val clientId: String
 ) : MqttManager, CoroutineScope {
 
-    private val job = Job()
+    private var job = Job()
     private var maxNumberOfRetries = 4
     private var retryInterval = 4000L
     private var topics = arrayOf<String>()
@@ -40,12 +39,9 @@ class MqttCoroutineManager(
     private var mqttConnectOptions: MqttConnectOptions? = null
     private var explicitDisconnection = false
     private val tag = MqttCoroutineManager::class.java.simpleName
-    private val mqttPayloadChannel: SendChannel<Pair<String, MqttMessage>> =
-        actor { channel.consumeEach { mqttPayload.invoke(it) } }
-    private val mqttConnectionStatusChannel: SendChannel<MqttConnectionState> =
-        actor { channel.consumeEach { mqttConnectionStateListener.invoke(it) } }
+    private var mqttConnectionChannel: Channel<MqttConnectionState>? = null
+    private var mqttPayloadChannel: Channel<Pair<String, MqttMessage>>? = null
     override val coroutineContext: CoroutineContext get() = job + dispatcher
-
 
     override fun connect(
         topics: Array<String>,
@@ -58,7 +54,13 @@ class MqttCoroutineManager(
             Log.i(tag, "connect was called although the mqttClient is already connected.")
             return
         }
-        job.start()
+        job = Job()
+        mqttConnectionChannel = Channel()
+        mqttPayloadChannel = Channel()
+        launch {
+            mqttConnectionChannel?.consumeEach { mqttConnectionStateListener.invoke(it) }
+            mqttPayloadChannel?.consumeEach { mqttPayload.invoke(it) }
+        }
         this@MqttCoroutineManager.topics = topics
         this@MqttCoroutineManager.maxNumberOfRetries = maxNumberOfRetries
         this@MqttCoroutineManager.retryInterval = retryInterval
@@ -99,11 +101,11 @@ class MqttCoroutineManager(
     }
 
     fun sendMqttPayload(message: Pair<String, MqttMessage>) = launch {
-        mqttPayloadChannel.send(message)
+        mqttPayloadChannel?.send(message)
     }
 
     private fun sendMqttConnectionStatus(mqttConnectionState: MqttConnectionState) = launch {
-        mqttConnectionStatusChannel.send(mqttConnectionState)
+        mqttConnectionChannel?.send(mqttConnectionState)
     }
 
     private val connectAction = object : IMqttActionListener {
@@ -148,11 +150,6 @@ class MqttCoroutineManager(
             Log.e(tag, "Disconnection failed: $exception")
             sendMqttConnectionStatus(MqttConnectionState.DISCONNECTION_FAILED)
         }
-    }
-
-    override fun destroyMqttClient() {
-        job.cancel()
-        disconnect()
     }
 
     override fun disconnect() {
