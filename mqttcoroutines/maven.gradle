@@ -2,25 +2,25 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
 def siteUrl = 'https://github.com/sorinirimies/MqttCoroutines'
-def codeRepositoryUrl = 'https://github.com/sorinirimies/MqttCoroutiness.git'
-def issuesUrl = 'https://github.com/sorinirimies/MqttCoroutiness'
+def codeRepositoryUrl = 'https://github.com/sorinirimies/MqttCoroutines.git'
+def issuesUrl = 'https://github.com/sorinirimies/MqttCoroutines'
 
 
 bintray {
-    user = project.hasProperty('bintrayPrivateUser') ? project.bintrayPrivateUser : System.getenv('BINTRAY_USER')
-    key = project.hasProperty('bintrayPrivateKey') ? project.bintrayPrivateKey : System.getenv('BINTRAY_PASSWORD')
+    user = project.hasProperty('bintrayUser') ? project.bintrayUser : System.getenv('BINTRAY_USER')
+    key = project.hasProperty('bintrayKey') ? project.bintrayKey : System.getenv('BINTRAY_PASSWORD')
 
     configurations = ['archives']
     publish = true
     pkg {
         repo = 'greenlibs'
         name = 'MqttCoroutines'
-        desc = 'Coroutines wrapper for the Paho Mqtt library.'
+        desc = 'Coroutines wrapper for the Paho Mqtt Client library.'
         websiteUrl = siteUrl
         issueTrackerUrl = issuesUrl
         vcsUrl = codeRepositoryUrl
         licenses = ['Apache-2.0']
-        labels = ['library', 'kotlin', 'android', 'MqttCoroutines', 'mqtt', 'coroutines']
+        labels = ['library', 'kotlin', 'android', 'MqttCoroutines', 'mqtt', 'coroutines', 'paho']
     }
 }
 
@@ -39,12 +39,11 @@ install {
             licenses {
                 license { // HARDCODED
                     name 'Apache-2.0'
-                    url 'https://www.gnu.org/licenses/gpl.txt'
+                    url 'https://www.apache.org/licenses/LICENSE-2.0'
                     distribution 'repo'
                 }
             }
         }
-
     }
 }
 
