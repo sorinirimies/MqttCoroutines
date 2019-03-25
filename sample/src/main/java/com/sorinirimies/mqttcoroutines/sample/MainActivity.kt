@@ -8,21 +8,18 @@ import com.sorinirimies.mqttcoroutines.MqttConnectionStateListener
 import com.sorinirimies.mqttcoroutines.MqttCoroutineManager
 import com.sorinirimies.mqttcoroutines.MqttPayload
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.Dispatchers
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 
 class MainActivity : AppCompatActivity() {
     private val mqttManager by lazy {
         MqttCoroutineManager(
-                mqttPayload = mqttPayloadListener,
-                mqttConnectionStateListener = mqttConnectionStateListener,
-                dispatcher = Dispatchers.Main,
-                serverUrl = "tcp://test.mosquitto.org:1883",
-                clientId = Settings.Secure.getString(
-                        this.contentResolver,
-                        Settings.Secure.ANDROID_ID
-
-                )
+            mqttPayload = mqttPayloadListener,
+            mqttConnectionStateListener = mqttConnectionStateListener,
+            serverUrl = "tcp://test.mosquitto.org:1883",
+            clientId = Settings.Secure.getString(
+                this.contentResolver,
+                Settings.Secure.ANDROID_ID
+            )
         )
     }
 
@@ -31,8 +28,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         btnStartMqtt.setOnClickListener {
             mqttManager.connect(
-                    arrayOf("vehicle/color"),
-                    intArrayOf(0), mqttConnectOptions = MqttConnectOptions()
+                arrayOf("vehicle/color"),
+                intArrayOf(0), mqttConnectOptions = MqttConnectOptions()
             )
         }
         btnStopMqtt.setOnClickListener { mqttManager.disconnect() }
@@ -45,8 +42,8 @@ class MainActivity : AppCompatActivity() {
 
     private val mqttPayloadListener: MqttPayload = { mqttPayload ->
         Log.i(
-                MainActivity::class.java.simpleName,
-                "Mqtt payload is: ${mqttPayload.first} ${mqttPayload.second}"
+            MainActivity::class.java.simpleName,
+            "Mqtt payload is: ${mqttPayload.first} ${mqttPayload.second}"
         )
     }
 
