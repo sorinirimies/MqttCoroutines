@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         btnStartMqtt.setOnClickListener {
             mqttManager.connect(
-                arrayOf("vehicle/color"),
+                arrayOf("home/+/temperature"),
                 intArrayOf(0), mqttConnectOptions = MqttConnectOptions()
             )
         }
