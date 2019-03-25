@@ -7,4 +7,4 @@ To add it to your project add into your main build.gradle
         
 And to your dependencies:
 
-    implementation("com.sorinirimies:mqttcoroutines:[latest](https://github.com/sorinirimies/MqttCoroutines/releases/tag/0.0.1)")
+    implementation("com.sorinirimies:mqttcoroutines:"[latest](https://github.com/sorinirimies/MqttCoroutines/releases/tag/0.0.1)
