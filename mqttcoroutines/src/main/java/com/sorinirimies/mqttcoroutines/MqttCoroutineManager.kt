@@ -39,8 +39,8 @@ class MqttCoroutineManager(
     private var mqttConnectOptions: MqttConnectOptions? = null
     private var explicitDisconnection = false
     private val tag = MqttCoroutineManager::class.java.simpleName
-    private var mqttConnectionChannel: Channel<MqttConnectionState>? = null
-    private var mqttPayloadChannel: Channel<Pair<String, MqttMessage>>? = null
+    private var mqttConnectionChannel: Channel<MqttConnectionState> = Channel()
+    private var mqttPayloadChannel: Channel<Pair<String, MqttMessage>> = Channel()
     override val coroutineContext: CoroutineContext get() = job + dispatcher
 
     override fun connect(
@@ -58,9 +58,10 @@ class MqttCoroutineManager(
         mqttConnectionChannel = Channel()
         mqttPayloadChannel = Channel()
         launch {
-            mqttConnectionChannel?.consumeEach { mqttConnectionStateListener.invoke(it) }
-            mqttPayloadChannel?.consumeEach { mqttPayload.invoke(it) }
+            mqttConnectionChannel.consumeEach { mqttConnectionStateListener.invoke(it) }
+            mqttPayloadChannel.consumeEach { mqttPayload.invoke(it) }
         }
+        job.start()
         this@MqttCoroutineManager.topics = topics
         this@MqttCoroutineManager.maxNumberOfRetries = maxNumberOfRetries
         this@MqttCoroutineManager.retryInterval = retryInterval
@@ -100,13 +101,10 @@ class MqttCoroutineManager(
         }
     }
 
-    fun sendMqttPayload(message: Pair<String, MqttMessage>) = launch {
-        mqttPayloadChannel?.send(message)
-    }
+    fun sendMqttPayload(message: Pair<String, MqttMessage>) = launch { mqttPayloadChannel.send(message) }
 
-    private fun sendMqttConnectionStatus(mqttConnectionState: MqttConnectionState) = launch {
-        mqttConnectionChannel?.send(mqttConnectionState)
-    }
+    private fun sendMqttConnectionStatus(mqttConnectionState: MqttConnectionState) =
+        launch { mqttConnectionChannel.send(mqttConnectionState) }
 
     private val connectAction = object : IMqttActionListener {
 
@@ -132,6 +130,7 @@ class MqttCoroutineManager(
             isMqttClientConnected = false
             sendMqttConnectionStatus(MqttConnectionState.DISCONNECTED)
             Log.e(tag, "MQTT could not establish connection: $exception")
+            launch { job.cancelAndJoin() }
             if (!explicitDisconnection) {
                 retryConnection()
             }
@@ -144,6 +143,7 @@ class MqttCoroutineManager(
             sendMqttConnectionStatus(MqttConnectionState.DISCONNECTED)
             isMqttClientConnected = false
             explicitDisconnection = true
+            launch { job.cancelAndJoin() }
         }
 
         override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable) {
