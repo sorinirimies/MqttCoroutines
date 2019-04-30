@@ -2,8 +2,8 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 ext {
-    libraryVersion = '0.1.0'
-    coroutinesVersion = "1.1.1"
+    libraryVersion = '0.1.1'
+    coroutinesVersion = "1.2.1"
     mqttVersion = '1.2.0'
 }
 
