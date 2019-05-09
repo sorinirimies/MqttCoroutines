@@ -8,6 +8,7 @@ import com.sorinirimies.mqttcoroutines.MqttConnectionStateListener
 import com.sorinirimies.mqttcoroutines.MqttCoroutineManager
 import com.sorinirimies.mqttcoroutines.MqttPayload
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.Dispatchers
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 
 class MainActivity : AppCompatActivity() {
@@ -16,6 +17,7 @@ class MainActivity : AppCompatActivity() {
             mqttPayload = mqttPayloadListener,
             mqttConnectionStateListener = mqttConnectionStateListener,
             serverUrl = "tcp://test.mosquitto.org:1883",
+            dispatcher = Dispatchers.Main,
             clientId = Settings.Secure.getString(
                 this.contentResolver,
                 Settings.Secure.ANDROID_ID

@@ -16,7 +16,7 @@ typealias MqttConnectionStateListener = (MqttConnectionState) -> Unit
 class MqttCoroutineManager(
     private val mqttPayload: MqttPayload,
     private val mqttConnectionStateListener: MqttConnectionStateListener,
-    private val dispatcher: CoroutineDispatcher = Dispatchers.Main,
+    private var dispatcher: CoroutineDispatcher = Dispatchers.Main,
     private val serverUrl: String,
     private val clientId: String
 ) : MqttManager, CoroutineScope {
@@ -62,11 +62,13 @@ class MqttCoroutineManager(
             mqttPayloadChannel.consumeEach { mqttPayload.invoke(it) }
         }
         job.start()
+
         this@MqttCoroutineManager.topics = topics
         this@MqttCoroutineManager.maxNumberOfRetries = maxNumberOfRetries
         this@MqttCoroutineManager.retryInterval = retryInterval
         this@MqttCoroutineManager.qos = qos
         this@MqttCoroutineManager.mqttConnectOptions = mqttConnectOptions
+
         try {
             sendMqttConnectionStatus(MqttConnectionState.CONNECTING)
             mqttClient.connect(mqttConnectOptions, null, connectAction)
@@ -101,7 +103,7 @@ class MqttCoroutineManager(
         }
     }
 
-    fun sendMqttPayload(message: Pair<String, MqttMessage>) = launch { mqttPayloadChannel.send(message) }
+    private fun sendMqttPayload(message: Pair<String, MqttMessage>) = launch { mqttPayloadChannel.send(message) }
 
     private fun sendMqttConnectionStatus(mqttConnectionState: MqttConnectionState) =
         launch { mqttConnectionChannel.send(mqttConnectionState) }
