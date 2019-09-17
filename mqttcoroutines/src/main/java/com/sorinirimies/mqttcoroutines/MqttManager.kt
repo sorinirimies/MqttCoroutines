@@ -2,7 +2,7 @@ package com.sorinirimies.mqttcoroutines
 
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 
-interface MqttManager {
+internal interface MqttManager {
 
     /**
      * Connects the mqtt client to the mqttBroker and subscribes to the given [topics]. For [qos], please refer
@@ -13,7 +13,6 @@ interface MqttManager {
      * @param mqttConnectOptions the [MqttConnectOptions] with which we can configure the client
      * @param retryInterval how often to retry connecting
      * @param maxNumberOfRetries total amount of trtries
-     * @return whether mqttClient is connected or not
      */
     fun connect(
         topics: Array<String>,
