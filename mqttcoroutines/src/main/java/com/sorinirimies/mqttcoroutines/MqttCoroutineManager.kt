@@ -15,6 +15,8 @@ data class MqttPayload(val topic: String, val mqttMessage: MqttMessage)
 typealias MqttPayloadListener = (MqttPayload) -> Unit
 typealias MqttConnectionStateListener = (MqttConnectionState) -> Unit
 
+@ExperimentalCoroutinesApi
+@FlowPreview
 class MqttCoroutineManager(
     private val mqttPayloadListener: MqttPayloadListener,
     private val mqttConnectionStateListener: MqttConnectionStateListener,
