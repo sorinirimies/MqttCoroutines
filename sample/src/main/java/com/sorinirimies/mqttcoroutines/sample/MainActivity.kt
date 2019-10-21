@@ -7,6 +7,7 @@ import android.util.Log
 import com.sorinirimies.mqttcoroutines.MqttConnectionStateListener
 import com.sorinirimies.mqttcoroutines.MqttCoroutineManager
 import com.sorinirimies.mqttcoroutines.MqttPayload
+import com.sorinirimies.mqttcoroutines.MqttPayloadListener
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
@@ -14,7 +15,7 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 class MainActivity : AppCompatActivity() {
     private val mqttManager by lazy {
         MqttCoroutineManager(
-            mqttPayload = mqttPayloadListener,
+            mqttPayloadListener = mqttPayloadListener,
             mqttConnectionStateListener = mqttConnectionStateListener,
             serverUrl = "tcp://test.mosquitto.org:1883",
             dispatcher = Dispatchers.Main,
@@ -42,10 +43,10 @@ class MainActivity : AppCompatActivity() {
         Log.i(MainActivity::class.java.simpleName, "Connection state is: $connectionState")
     }
 
-    private val mqttPayloadListener: MqttPayload = { mqttPayload ->
+    private val mqttPayloadListener: MqttPayloadListener = { mqttPayload ->
         Log.i(
             MainActivity::class.java.simpleName,
-            "Mqtt payload is: ${mqttPayload.first} ${mqttPayload.second}"
+            "Mqtt payload is: ${mqttPayload.topic} ${mqttPayload.mqttMessage}"
         )
     }
 
