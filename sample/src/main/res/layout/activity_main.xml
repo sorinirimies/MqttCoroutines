@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".MainActivity">
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivity">
 
     <TextView
-        android:id="@+id/tvMqttConnectionLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Mqtt status:"
-        android:textAppearance="@style/Base.TextAppearance.AppCompat.Title"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_bias="0.173"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.304" />
+            android:id="@+id/tvMqttConnectionLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mqtt status:"
+            android:textAppearance="@style/Base.TextAppearance.AppCompat.Title"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_bias="0.173"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.304" />
 
     <TextView
             android:id="@+id/tvMqttConnection"
@@ -27,30 +27,52 @@
             android:text="Disconnected"
             android:textAppearance="@style/TextAppearance.AppCompat.Title"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toEndOf="@+id/tvMqttConnectionLabel"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.3" app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"/>
+            app:layout_constraintVertical_bias="0.3" />
 
     <Button
-        android:id="@+id/btnStartMqtt"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginBottom="269dp"
-        android:text="Connect MQTT"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+            android:id="@+id/btnStartMqtt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginBottom="269dp"
+            android:text="Connect MQTT"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
     <Button
-        android:id="@+id/btnStopMqtt"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:text="Disconnect MQTT"
-        app:layout_constraintBaseline_toBaselineOf="@+id/btnStartMqtt"
-        app:layout_constraintStart_toEndOf="@+id/btnStartMqtt" />
+            android:id="@+id/btnStopMqtt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:text="Disconnect MQTT"
+            app:layout_constraintBaseline_toBaselineOf="@+id/btnStartMqtt"
+            app:layout_constraintStart_toEndOf="@+id/btnStartMqtt" />
 
+    <Button
+            android:id="@+id/btnSendMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="96dp"
+            android:text="send Message"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnStartMqtt" />
+
+    <EditText
+            android:id="@+id/edtMessage"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="28dp"
+            android:layout_marginTop="96dp"
+            android:hint="Send something"
+            android:layout_marginEnd="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/btnSendMessage"
+            app:layout_constraintTop_toBottomOf="@+id/btnStartMqtt" />
 
 </android.support.constraint.ConstraintLayout>

@@ -1,27 +1,31 @@
 package com.sorinirimies.mqttcoroutines.sample
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.provider.Settings
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
-import com.sorinirimies.mqttcoroutines.MqttConnectionStateListener
-import com.sorinirimies.mqttcoroutines.MqttCoroutineManager
 import com.sorinirimies.mqttcoroutines.MqttPayload
-import com.sorinirimies.mqttcoroutines.MqttPayloadListener
+import com.sorinirimies.mqttcoroutines.MqttProviderConfiguration
+import com.sorinirimies.mqttcoroutines.MqttProviderImpl
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.collect
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 
-class MainActivity : AppCompatActivity() {
-    private val mqttManager by lazy {
-        MqttCoroutineManager(
-            mqttPayloadListener = mqttPayloadListener,
-            mqttConnectionStateListener = mqttConnectionStateListener,
-            serverUrl = "tcp://test.mosquitto.org:1883",
-            dispatcher = Dispatchers.Main,
-            clientId = Settings.Secure.getString(
-                this.contentResolver,
-                Settings.Secure.ANDROID_ID
+@SuppressLint("HardwareIds")
+@ExperimentalCoroutinesApi
+@FlowPreview
+class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
+    private val topic = "home/temperature"
+    private val mqttProvider by lazy {
+        MqttProviderImpl(
+            mqttProviderConfiguration = MqttProviderConfiguration(
+                serverUrl = "tcp://test.mosquitto.org:1883",
+                clientId = Settings.Secure.getString(
+                    this.contentResolver,
+                    Settings.Secure.ANDROID_ID
+                )
             )
         )
     }
@@ -30,25 +34,39 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         btnStartMqtt.setOnClickListener {
-            mqttManager.connect(
-                arrayOf("home/+/temperature"),
+            mqttProvider.connect(
+                arrayOf(topic),
                 intArrayOf(0), mqttConnectOptions = MqttConnectOptions()
             )
         }
-        btnStopMqtt.setOnClickListener { mqttManager.disconnect() }
+        btnStopMqtt.setOnClickListener { mqttProvider.disconnect() }
+        btnSendMessage.setOnClickListener {
+            mqttProvider.sendPayload(
+                MqttPayload(topic, edtMessage.text.toString().toByteArray(), 0)
+            )
+        }
+        launch {
+            mqttProvider.mqttConnectionStateFlow.collect { conState ->
+                tvMqttConnection.text = "$conState"
+                Log.i(
+                    MainActivity::class.java.simpleName,
+                    "Connection state is: $conState"
+                )
+            }
+        }
+        launch {
+            mqttProvider.mqttPayloadFlow.collect { payload ->
+                Log.i(
+                    MainActivity::class.java.simpleName,
+                    "Mqtt payload is: ${payload.topic} ${payload.msg.toString(Charsets.UTF_8)}"
+                )
+            }
+        }
     }
 
-    private val mqttConnectionStateListener: MqttConnectionStateListener = { connectionState ->
-        tvMqttConnection.text = "$connectionState"
-        Log.i(MainActivity::class.java.simpleName, "Connection state is: $connectionState")
+    override fun onDestroy() {
+        super.onDestroy()
+        cancel()
     }
-
-    private val mqttPayloadListener: MqttPayloadListener = { mqttPayload ->
-        Log.i(
-            MainActivity::class.java.simpleName,
-            "Mqtt payload is: ${mqttPayload.topic} ${mqttPayload.mqttMessage}"
-        )
-    }
-
 }
 

@@ -1,8 +1,9 @@
 package com.sorinirimies.mqttcoroutines
 
+import kotlinx.coroutines.flow.Flow
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 
-internal interface MqttManager {
+interface MqttProvider {
 
     /**
      * Connects the mqtt client to the mqttBroker and subscribes to the given [topics]. For [qos], please refer
@@ -12,7 +13,7 @@ internal interface MqttManager {
      * @param qos
      * @param mqttConnectOptions the [MqttConnectOptions] with which we can configure the client
      * @param retryInterval how often to retry connecting
-     * @param maxNumberOfRetries total amount of trtries
+     * @param maxNumberOfRetries total amount of retries
      */
     fun connect(
         topics: Array<String>,
@@ -21,6 +22,19 @@ internal interface MqttManager {
         retryInterval: Long = 4000L,
         maxNumberOfRetries: Int = 4
     )
+
+    /**
+     * [MqttPayload] [Flow] to which a consumer can subscribe
+     */
+    val mqttPayloadFlow: Flow<MqttPayload>
+
+    /**
+     * [MqttConnectionState] [Flow] to which a consumer can subscribe
+     */
+    val mqttConnectionStateFlow: Flow<MqttConnectionState>
+
+    /** Sends a given [MqttPayload] to a broker*/
+    fun sendPayload(mqtt: MqttPayload)
 
     /**
      * Disconnects the mqtt client
