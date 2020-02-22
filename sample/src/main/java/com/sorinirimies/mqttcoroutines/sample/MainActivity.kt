@@ -4,13 +4,11 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.provider.Settings
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
-import com.sorinirimies.mqttcoroutines.MqttPayload
 import com.sorinirimies.mqttcoroutines.MqttProviderConfiguration
 import com.sorinirimies.mqttcoroutines.MqttProviderImpl
+import com.sorinirimies.mqttcoroutines.MqttState
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collect
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 
 @SuppressLint("HardwareIds")
@@ -41,24 +39,9 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         }
         btnStopMqtt.setOnClickListener { mqttProvider.disconnect() }
         btnSendMessage.setOnClickListener {
-            mqttProvider.sendPayload(
-                MqttPayload(topic, edtMessage.text.toString().toByteArray(), 0)
-            )
-        }
-        launch {
-            mqttProvider.mqttConnectionStateFlow.collect { conState ->
-                tvMqttConnection.text = "$conState"
-                Log.i(
-                    MainActivity::class.java.simpleName,
-                    "Connection state is: $conState"
-                )
-            }
-        }
-        launch {
-            mqttProvider.mqttPayloadFlow.collect { payload ->
-                Log.i(
-                    MainActivity::class.java.simpleName,
-                    "Mqtt payload is: ${payload.topic} ${payload.msg.toString(Charsets.UTF_8)}"
+            launch {
+                mqttProvider.sendPayload(
+                    MqttState.MqttPayload(topic, edtMessage.text.toString().toByteArray(), 0)
                 )
             }
         }

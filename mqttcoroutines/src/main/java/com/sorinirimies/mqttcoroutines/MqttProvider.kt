@@ -21,23 +21,13 @@ interface MqttProvider {
         mqttConnectOptions: MqttConnectOptions? = null,
         retryInterval: Long = 4000L,
         maxNumberOfRetries: Int = 4
-    )
-
-    /**
-     * [MqttPayload] [Flow] to which a consumer can subscribe
-     */
-    val mqttPayloadFlow: Flow<MqttPayload>
-
-    /**
-     * [MqttConnectionState] [Flow] to which a consumer can subscribe
-     */
-    val mqttConnectionStateFlow: Flow<MqttConnectionState>
+    ): Flow<MqttState>
 
     /** Sends a given [MqttPayload] to a broker*/
-    fun sendPayload(mqtt: MqttPayload)
+    suspend fun sendPayload(mqtt: MqttState.MqttPayload)
 
     /**
      * Disconnects the mqtt client
      */
-    fun disconnect()
+    fun disconnect(): Flow<MqttState>
 }
