@@ -3,7 +3,7 @@ package com.sorinirimies.mqttcoroutines
 import android.util.Log
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.channels.ticker
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import org.eclipse.paho.client.mqttv3.*
 import org.eclipse.paho.client.mqttv3.MqttException
@@ -24,19 +24,6 @@ sealed class MqttState {
 class MqttProviderImpl(
     private val mqttProviderConfiguration: MqttProviderConfiguration
 ) : MqttProvider {
-    private var maxNumberOfRetries = 4
-    private var retryInterval = 4000L
-    private var topics = arrayOf<String>()
-    private var qos = intArrayOf()
-    private var retryCount = 0
-    private var timerReconnect = ticker(0, retryInterval).apply {
-        retryCount++
-        Log.i(tag, "MQTT reconnection retry count: $retryCount")
-        if (mqttClient.isConnected || retryCount > maxNumberOfRetries) {
-            (MqttConnectionState.CONNECTED)
-        }
-        connect(topics, qos, mqttConnectOptions)
-    }
     private var isMqttClientConnected = false
     private val mqttClient by lazy(LazyThreadSafetyMode.NONE) {
         MqttAsyncClient(
@@ -45,14 +32,11 @@ class MqttProviderImpl(
             mqttProviderConfiguration.mqttClientPersistence
         )
     }
-    private var mqttConnectOptions: MqttConnectOptions? = null
-    private var explicitDisconnection = false
     private val tag = MqttProviderImpl::class.java.simpleName
 
     override suspend fun sendPayload(mqtt: MqttState.MqttPayload) {
         try {
             mqttClient.publish(mqtt.topic, MqttMessage(mqtt.msg))
-            Log.i(tag, "client disconnected")
         } catch (e: MqttPersistenceException) {
             e.printStackTrace()
         } catch (e: MqttException) {
@@ -94,10 +78,6 @@ class MqttProviderImpl(
                 Log.e(tag, "MQTT could not establish connection: $exception")
                 isMqttClientConnected = false
                 offer(MqttState.MqttConnection(MqttConnectionState.DISCONNECTED))
-                if (!explicitDisconnection) {
-                    retryConnection()
-                    return
-                }
             }
 
             val mqttMessageCallback = object : MqttCallback {
@@ -118,9 +98,6 @@ class MqttProviderImpl(
                 override fun connectionLost(cause: Throwable) {
                     offer(MqttState.MqttConnection(MqttConnectionState.DISCONNECTED))
                     Log.d(cause.message, "MQTT connection lost!")
-                    isMqttClientConnected = false
-                    if (explicitDisconnection) return
-                    retryConnection()
                 }
             }
         }
@@ -136,10 +113,9 @@ class MqttProviderImpl(
                 else -> Log.d(tag, "Mqtt connection exception: $e")
             }
         }
-    }
-
-    private fun retryConnection() {
-
+        awaitClose {
+            mqttClient.disconnect()
+        }
     }
 
     override fun disconnect() = callbackFlow {
@@ -150,7 +126,6 @@ class MqttProviderImpl(
         val disconnectAction = object : IMqttActionListener {
             override fun onSuccess(asyncActionToken: IMqttToken?) {
                 isMqttClientConnected = false
-                explicitDisconnection = true
                 offer(MqttState.MqttConnection(MqttConnectionState.DISCONNECTED))
                 Log.i(tag, "Mqtt Client disconnected")
             }
@@ -167,7 +142,6 @@ class MqttProviderImpl(
         } catch (cause: MqttException) {
             if (cause.reasonCode == MqttException.REASON_CODE_CLIENT_ALREADY_DISCONNECTED.toInt()) {
                 isMqttClientConnected = false
-                explicitDisconnection = true
                 Log.i(tag, "Client is already disconnected!")
             } else {
                 Log.e(tag, "Disconnection error: $cause")
