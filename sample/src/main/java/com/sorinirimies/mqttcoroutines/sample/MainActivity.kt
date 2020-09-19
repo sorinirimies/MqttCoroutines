@@ -5,8 +5,8 @@ import android.os.Bundle
 import android.provider.Settings
 import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
+import com.sorinirimies.mqttcoroutines.MqttProvider
 import com.sorinirimies.mqttcoroutines.MqttProviderConfiguration
-import com.sorinirimies.mqttcoroutines.MqttProviderImpl
 import com.sorinirimies.mqttcoroutines.MqttState
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
@@ -19,7 +19,7 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     private val topic = "home/temperature"
     private val mqttProvider by lazy {
-        MqttProviderImpl(
+        MqttProvider.create(
             mqttProviderConfiguration = MqttProviderConfiguration(
                 serverUrl = "tcp://test.mosquitto.org:1883",
                 clientId = Settings.Secure.getString(

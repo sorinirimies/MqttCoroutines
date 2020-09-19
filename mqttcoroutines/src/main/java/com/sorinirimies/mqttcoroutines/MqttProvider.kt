@@ -23,11 +23,16 @@ interface MqttProvider {
         maxNumberOfRetries: Int = 4
     ): Flow<MqttState>
 
-    /** Sends a given [MqttPayload] to a broker*/
+    /** Sends a given [MqttState.MqttPayload] to a broker*/
     suspend fun sendPayload(mqtt: MqttState.MqttPayload)
 
     /**
      * Disconnects the mqtt client
      */
     fun disconnect(): Flow<MqttState>
+
+    companion object {
+
+        fun create(mqttProviderConfiguration: MqttProviderConfiguration) : MqttProvider= MqttProviderImpl(mqttProviderConfiguration)
+    }
 }

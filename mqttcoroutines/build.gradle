@@ -2,8 +2,8 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 ext {
-    libraryVersion = '1.0.0'
-    coroutinesVersion = "1.3.3"
+    libraryVersion = '1.0.1'
+    coroutinesVersion = "1.3.9"
     mqttVersion = '1.2.1'
 }
 
@@ -11,10 +11,10 @@ group 'com.sorinirimies'
 version "$libraryVersion"
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 29
+        targetSdkVersion 30
         versionCode 1
         versionName "$version"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"

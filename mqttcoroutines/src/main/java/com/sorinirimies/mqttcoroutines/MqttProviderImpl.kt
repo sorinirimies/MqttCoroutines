@@ -2,26 +2,13 @@ package com.sorinirimies.mqttcoroutines
 
 import android.util.Log
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import org.eclipse.paho.client.mqttv3.*
 import org.eclipse.paho.client.mqttv3.MqttException
 
-sealed class MqttState {
-    data class MqttPayload(
-        val topic: String,
-        val msg: ByteArray,
-        val qos: Int,
-        val retained: Boolean = false
-    ) : MqttState()
-
-    data class MqttConnection(val mqttConnectionState: MqttConnectionState) : MqttState()
-}
-
 @ExperimentalCoroutinesApi
-@FlowPreview
-class MqttProviderImpl(
+ internal class MqttProviderImpl(
     private val mqttProviderConfiguration: MqttProviderConfiguration
 ) : MqttProvider {
     private var isMqttClientConnected = false
@@ -50,7 +37,7 @@ class MqttProviderImpl(
         mqttConnectOptions: MqttConnectOptions?,
         retryInterval: Long,
         maxNumberOfRetries: Int
-    ) = callbackFlow {
+    ) = callbackFlow<MqttState> {
         if (isMqttClientConnected) {
             Log.i(tag, "connect was called although the mqttClient is already connected.")
             return@callbackFlow
@@ -118,7 +105,7 @@ class MqttProviderImpl(
         }
     }
 
-    override fun disconnect() = callbackFlow {
+    override fun disconnect() = callbackFlow<MqttState> {
         if (!isMqttClientConnected) {
             Log.w(tag, "disconnect was called although the mqttClient is not connected")
             return@callbackFlow
