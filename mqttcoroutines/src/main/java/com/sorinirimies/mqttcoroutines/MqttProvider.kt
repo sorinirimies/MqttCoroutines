@@ -16,11 +16,11 @@ interface MqttProvider {
      * @param maxNumberOfRetries total amount of retries
      */
     fun connect(
-        topics: Array<String>,
-        qos: IntArray,
-        mqttConnectOptions: MqttConnectOptions? = null,
-        retryInterval: Long = 4000L,
-        maxNumberOfRetries: Int = 4
+            topics: Array<String>,
+            qos: IntArray,
+            mqttConnectOptions: MqttConnectOptions? = null,
+            retryInterval: Long = 4000L,
+            maxNumberOfRetries: Int = 4
     ): Flow<MqttState>
 
     /** Sends a given [MqttState.MqttPayload] to a broker*/
@@ -33,6 +33,6 @@ interface MqttProvider {
 
     companion object {
 
-        fun create(mqttProviderConfiguration: MqttProviderConfiguration) : MqttProvider= MqttProviderImpl(mqttProviderConfiguration)
+        fun create(mqttProviderConfiguration: MqttProviderConfiguration): MqttProvider = MqttProviderImpl(mqttProviderConfiguration)
     }
 }
