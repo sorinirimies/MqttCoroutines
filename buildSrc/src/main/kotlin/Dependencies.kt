@@ -3,6 +3,7 @@ object Lib {
     const val kotlinLang = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Version.kotlinVersion}"
 
     object AndroidX {
+        const val activityKtx = "androidx.activity:activity-ktx:${Version.AndroidX.activityKtx}"
         const val appcompat = "androidx.appcompat:appcompat:${Version.AndroidX.appcompat}"
     }
 

@@ -8,9 +8,8 @@ kotlin {
 }
 
 android {
-
+    compileSdkVersion(31)
     defaultConfig {
-        applicationId = "com.sorinirimies.mqttcoroutines"
         minSdkVersion(21)
         targetSdkVersion(31)
         versionCode = 1
@@ -23,12 +22,18 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
     implementation(Lib.kotlinLang)
+
     api(Lib.KotlinX.coroutinesCore)
     api(Lib.KotlinX.coroutinesAndroid)
+
     api(Lib.mqtt)
 
     testImplementation("junit:junit:4.13.1")

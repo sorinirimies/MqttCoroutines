@@ -1,21 +1,17 @@
 package com.sorinirimies.mqttcoroutines.sample
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.provider.Settings
-import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.sorinirimies.mqttcoroutines.MqttProvider
 import com.sorinirimies.mqttcoroutines.MqttProviderConfiguration
 import com.sorinirimies.mqttcoroutines.MqttState
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 
-@SuppressLint("HardwareIds")
 @ExperimentalCoroutinesApi
-@FlowPreview
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     private val topic = "home/temperature"
     private val mqttProvider by lazy {

@@ -5,10 +5,11 @@ object Version {
     const val kotlinVersion = "1.4.10"
 
     object Android {
-        const val buildToolVersion = "4.1.0"
+        const val buildToolVersion = "4.0.1"
     }
 
     object AndroidX {
+        const val activityKtx = "1.2.0-beta01"
         const val appcompat = "1.1.0"
     }
 }
