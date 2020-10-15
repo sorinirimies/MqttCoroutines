@@ -11,8 +11,4 @@ object Lib {
         const val coroutinesCore = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Version.coroutines}"
         const val coroutinesAndroid = "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Version.coroutines}"
     }
-
-    object BuildPlugins {
-        const val androidGradlePlugin = "com.android.tools.build:gradle:${Version.Android.buildToolVersion}"
-    }
 }
