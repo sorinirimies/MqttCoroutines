@@ -6,6 +6,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import org.eclipse.paho.client.mqttv3.*
 import org.eclipse.paho.client.mqttv3.MqttException
+import kotlin.jvm.Throws
 
 @ExperimentalCoroutinesApi
  internal class MqttProviderImpl(

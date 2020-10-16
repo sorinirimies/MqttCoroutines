@@ -4,11 +4,11 @@ plugins {
     kotlin("android.extensions")
 }
 android {
-    compileSdkVersion(31)
+    compileSdkVersion(30)
     defaultConfig {
         applicationId = "com.sorinirimies.mqttcoroutines.sample"
-        minSdkVersion(21)
-        targetSdkVersion(31)
+        minSdkVersion(17)
+        targetSdkVersion(30)
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"
@@ -26,15 +26,17 @@ android {
 }
 
 dependencies {
-    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
-    implementation(Lib.kotlinLang)
+    implementation(kotlin("stdlib", Version.kotlinVersion))
+
+    api(project(":mqttcoroutines"))
+
     implementation(Lib.AndroidX.appcompat)
     implementation(Lib.AndroidX.activityKtx)
-    implementation("com.android.support.constraint:constraint-layout:1.1.3")
+    implementation(Lib.AndroidX.constraintLayout)
+
     testImplementation("junit:junit:4.13.1")
     androidTestImplementation("com.android.support.test:runner:1.0.2")
     androidTestImplementation("com.android.support.test.espresso:espresso-core:3.0.2")
-    api(project(":mqttcoroutines"))
 }
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions.freeCompilerArgs += listOf(

@@ -1,5 +1,6 @@
 package com.sorinirimies.mqttcoroutines.sample
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
@@ -7,22 +8,24 @@ import androidx.appcompat.app.AppCompatActivity
 import com.sorinirimies.mqttcoroutines.MqttProvider
 import com.sorinirimies.mqttcoroutines.MqttProviderConfiguration
 import com.sorinirimies.mqttcoroutines.MqttState
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 
+@SuppressLint("HardwareIds")
 @ExperimentalCoroutinesApi
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     private val topic = "home/temperature"
     private val mqttProvider by lazy {
         MqttProvider.create(
-            mqttProviderConfiguration = MqttProviderConfiguration(
-                serverUrl = "tcp://test.mosquitto.org:1883",
-                clientId = Settings.Secure.getString(
-                    this.contentResolver,
-                    Settings.Secure.ANDROID_ID
+                mqttProviderConfiguration = MqttProviderConfiguration(
+                        serverUrl = "tcp://test.mosquitto.org:1883",
+                        clientId = Settings.Secure.getString(
+                                this.contentResolver,
+                                Settings.Secure.ANDROID_ID
+                        )
                 )
-            )
         )
     }
 
@@ -32,20 +35,20 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         btnStartMqtt.setOnClickListener {
             launch {
                 mqttProvider.connect(
-                    arrayOf(topic),
-                    intArrayOf(0), mqttConnectOptions = MqttConnectOptions()
+                        arrayOf(topic),
+                        intArrayOf(0), mqttConnectOptions = MqttConnectOptions()
                 ).collect { mqttState ->
                     when (mqttState) {
                         is MqttState.MqttConnection -> tvMqttConnection.text =
-                            "${mqttState.mqttConnectionState}"
+                                "${mqttState.mqttConnectionState}"
 
                         is MqttState.MqttPayload -> {
                             Toast.makeText(
-                                this@MainActivity,
-                                "Mqtt payload for topic ${mqttState.topic} is ${mqttState.msg.toString(
-                                    Charsets.UTF_8
-                                )}",
-                                Toast.LENGTH_SHORT
+                                    this@MainActivity,
+                                    "Mqtt payload for topic ${mqttState.topic} is ${mqttState.msg.toString(
+                                            Charsets.UTF_8
+                                    )}",
+                                    Toast.LENGTH_SHORT
                             ).show()
                         }
                     }
@@ -56,7 +59,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         btnSendMessage.setOnClickListener {
             launch {
                 mqttProvider.sendPayload(
-                    MqttState.MqttPayload(topic, edtMessage.text.toString().toByteArray(), 0)
+                        MqttState.MqttPayload(topic, edtMessage.text.toString().toByteArray(), 0)
                 )
             }
         }

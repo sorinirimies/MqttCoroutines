@@ -8,10 +8,10 @@ kotlin {
 }
 
 android {
-    compileSdkVersion(31)
+    compileSdkVersion(30)
     defaultConfig {
-        minSdkVersion(21)
-        targetSdkVersion(31)
+        minSdkVersion(17)
+        targetSdkVersion(30)
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"
@@ -29,12 +29,14 @@ android {
 }
 
 dependencies {
-    implementation(Lib.kotlinLang)
+
+    implementation(kotlin("stdlib", Version.kotlinVersion))
 
     api(Lib.KotlinX.coroutinesCore)
     api(Lib.KotlinX.coroutinesAndroid)
 
     api(Lib.mqtt)
 
-    testImplementation("junit:junit:4.13.1")
+    testImplementation(Lib.Test.junit4)
+    testImplementation(Lib.Test.junit5Api)
 }
