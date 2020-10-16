@@ -1,2 +1,2 @@
-rootProject.name = "MqttCoroutines"
+rootProject.name = "mqttcoroutines"
 include(":sample", ":mqttcoroutines")
