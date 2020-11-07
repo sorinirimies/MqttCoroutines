@@ -7,7 +7,7 @@ plugins {
 
 /**Create github.properties in root project folder file with gpr.usr=GITHUB_USER_ID  & gpr.key=PERSONAL_ACCESS_TOKEN**/
 val githubProperties = Properties()
-githubProperties.load(FileInputStream(rootProject.file("github.properties")))
+githubProperties.load(FileInputStream(rootProject.file("gradle.properties")))
 
 fun getVersionName(): String {
     return "1.0.3" // Replace with version Name
