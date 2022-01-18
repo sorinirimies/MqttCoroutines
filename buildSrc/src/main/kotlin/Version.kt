@@ -1,7 +1,8 @@
 object Version {
     const val mqtt = "1.2.1"
     const val coroutines = "1.4.1"
-    const val kotlinVersion = "1.4.10"
+    const val kotlinVersion = "1.4.20"
+    const val dokka = "1.4.10.2"
 
     object Test {
         const val junit5 = "5.4.2"

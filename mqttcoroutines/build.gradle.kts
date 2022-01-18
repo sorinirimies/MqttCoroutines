@@ -2,10 +2,18 @@ plugins {
     id("com.android.library")
     id("github-publish")
     kotlin("android")
+    id("org.jetbrains.dokka")
 }
 
 kotlin {
     explicitApi()
+}
+
+buildscript {
+    repositories.jcenter()
+    dependencies {
+        classpath("org.jetbrains.dokka:dokka-gradle-plugin:${Version.dokka}")
+    }
 }
 
 android {
@@ -40,4 +48,8 @@ dependencies {
 
     testImplementation(Lib.Test.junit4)
     testImplementation(Lib.Test.junit5Api)
+}
+
+tasks.dokkaHtml.configure {
+    outputDirectory.set(buildDir.resolve("dokkaCustomMultiModuleOutput"))
 }
